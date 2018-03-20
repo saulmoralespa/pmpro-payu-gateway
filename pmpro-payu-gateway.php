@@ -11,6 +11,7 @@ Domain Path: /languages/
 */
 
 define("PMPRO_PAYUGATEWAY_DIR", dirname(__FILE__));
+define('PMPRO_PAYUGATEWAY_FILE',__FILE__);
 
 //load payment gateway class
 require_once(PMPRO_PAYUGATEWAY_DIR . "/classes/class.pmprogateway_payu.php");

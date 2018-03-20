@@ -1,0 +1,75 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Pmpro payU Gateway\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-03-20 18:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/"
+
+#: classes/class.pmprogateway_payu.php:130
+msgid "Account ID"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:138
+msgid "Apikey"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:146
+msgid "Apilogin"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:157
+msgid "Colombian pesos (&#36;)"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://saulmoralespa.com"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:122
+msgid "Merchant ID"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:61
+msgid "PayU"
+msgstr ""
+
+#. Description of the plugin
+msgid "payU gateway for Paid Memberships Pro."
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:117
+msgid "payU Settings"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:158
+msgid "Peruvian sol (S/)"
+msgstr ""
+
+#. Name of the plugin
+msgid "Pmpro payU Gateway"
+msgstr ""
+
+#. Author of the plugin
+msgid "Saul Morales Pacheco"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:48
+msgid "Settings"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:49
+msgid "Support"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:201
+msgid "The payment is in pending status."
+msgstr ""

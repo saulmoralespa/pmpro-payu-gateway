@@ -1,0 +1,74 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Pmpro payU Gateway\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-03-20 18:00+0000\n"
+"PO-Revision-Date: 2018-03-20 18:19+0000\n"
+"Last-Translator: wpdev <cortuclas@gmail.com>\n"
+"Language-Team: Spanish (Colombia)\n"
+"Language: es_CO\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/"
+
+#: classes/class.pmprogateway_payu.php:130
+msgid "Account ID"
+msgstr "Identificador de la cuenta"
+
+#: classes/class.pmprogateway_payu.php:138
+msgid "Apikey"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:146
+msgid "Apilogin"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:157
+msgid "Colombian pesos (&#36;)"
+msgstr "Pesos colombianos (&#36;)"
+
+#. Author URI of the plugin
+msgid "https://saulmoralespa.com"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:122
+msgid "Merchant ID"
+msgstr "Id de Comercio"
+
+#: classes/class.pmprogateway_payu.php:61
+msgid "PayU"
+msgstr ""
+
+#. Description of the plugin
+msgid "payU gateway for Paid Memberships Pro."
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:117
+msgid "payU Settings"
+msgstr "Configuraciones payU"
+
+#: classes/class.pmprogateway_payu.php:158
+msgid "Peruvian sol (S/)"
+msgstr "Sol peruano (S/)"
+
+#. Name of the plugin
+msgid "Pmpro payU Gateway"
+msgstr ""
+
+#. Author of the plugin
+msgid "Saul Morales Pacheco"
+msgstr ""
+
+#: classes/class.pmprogateway_payu.php:48
+msgid "Settings"
+msgstr "Configuraciones"
+
+#: classes/class.pmprogateway_payu.php:49
+msgid "Support"
+msgstr "Soporte"
+
+#: classes/class.pmprogateway_payu.php:201
+msgid "The payment is in pending status."
+msgstr "El pago está en estado pendiente."

@@ -6,7 +6,7 @@ if(!function_exists('payu_pmp_gateway_load')){
 
     function payu_pmp_load_textdomain()
     {
-        load_plugin_textdomain( 'pmpro-payu-gateway', false, PMPRO_PAYUGATEWAY_DIR . '/languages' );
+        load_plugin_textdomain( 'pmpro-payu-gateway', false, dirname( plugin_basename( PMPRO_PAYUGATEWAY_FILE ) ) . '/languages' );
     }
 
     function payu_pmp_gateway_load()
@@ -15,6 +15,7 @@ if(!function_exists('payu_pmp_gateway_load')){
         //load classes init method
         add_action('init', array('PMProGateway_Payu', 'init'));
         add_filter('pmpro_currencies', array('PMProGateway_Payu', 'pmpro_currencies'), 100, 1);
+        add_filter('plugin_action_links_' . plugin_basename(PMPRO_PAYUGATEWAY_FILE), array('PMProGateway_Payu', 'plugin_action_links'));
 
 
         class PMProGateway_Payu extends PMProGateway
@@ -39,6 +40,14 @@ if(!function_exists('payu_pmp_gateway_load')){
                 //add fields to payment settings
                 add_filter('pmpro_payment_options', array('PMProGateway_Payu', 'pmpro_payment_options'));
                 add_filter('pmpro_payment_option_fields', array('PMProGateway_Payu', 'pmpro_payment_option_fields'), 10, 2);
+            }
+
+            static function plugin_action_links($links)
+            {
+
+                $mylinks[] = '<a href="'.admin_url('admin.php?page=pmpro-paymentsettings').'">'.__( 'Settings', 'pmpro-payu-gateway' ).'</a>';
+                $mylinks[] = '<a href="https://saulmoralespa.github.io/pmpro-payu-gateway/" target="_blank">'.__( 'Support', 'pmpro-payu-gateway' ).'</a>';
+                return array_merge($links, $mylinks);
             }
 
             /**
