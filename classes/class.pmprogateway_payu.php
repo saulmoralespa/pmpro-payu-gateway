@@ -13,12 +13,12 @@ if(!function_exists('payu_pmp_gateway_load')){
     {
         if (!class_exists('PMProGateway')) return;
         //load classes init method
-        add_action('init', array('PMProGateway_Payu', 'init'));
-        add_filter('pmpro_currencies', array('PMProGateway_Payu', 'pmpro_currencies'), 100, 1);
-        add_filter('plugin_action_links_' . plugin_basename(PMPRO_PAYUGATEWAY_FILE), array('PMProGateway_Payu', 'plugin_action_links'));
+        add_action('init', array('PMProGateway_payu', 'init'));
+        add_filter('pmpro_currencies', array('PMProGateway_payu', 'pmpro_currencies'), 100, 1);
+        add_filter('plugin_action_links_' . plugin_basename(PMPRO_PAYUGATEWAY_FILE), array('PMProGateway_payu', 'plugin_action_links'));
 
 
-        class PMProGateway_Payu extends PMProGateway
+        class PMProGateway_payu extends PMProGateway
         {
             function PMProGateway($gateway = NULL)
             {
@@ -35,11 +35,11 @@ if(!function_exists('payu_pmp_gateway_load')){
             static function init()
             {
                 //make sure PayPal Express is a gateway option
-                add_filter('pmpro_gateways', array('PMProGateway_Payu', 'pmpro_gateways'));
+                add_filter('pmpro_gateways', array('PMProGateway_payu', 'pmpro_gateways'));
 
                 //add fields to payment settings
-                add_filter('pmpro_payment_options', array('PMProGateway_Payu', 'pmpro_payment_options'));
-                add_filter('pmpro_payment_option_fields', array('PMProGateway_Payu', 'pmpro_payment_option_fields'), 10, 2);
+                add_filter('pmpro_payment_options', array('PMProGateway_payu', 'pmpro_payment_options'));
+                add_filter('pmpro_payment_option_fields', array('PMProGateway_payu', 'pmpro_payment_option_fields'), 10, 2);
             }
 
             static function plugin_action_links($links)
@@ -74,6 +74,7 @@ if(!function_exists('payu_pmp_gateway_load')){
                     'sslseal',
                     'nuclear_HTTPS',
                     'gateway_environment',
+                    'country',
                     'merchant_id',
                     'account_id',
                     'apikey',
@@ -84,7 +85,6 @@ if(!function_exists('payu_pmp_gateway_load')){
                     'tax_rate',
                     'accepted_credit_cards'
                 );
-
                 return $options;
             }
 
@@ -96,7 +96,7 @@ if(!function_exists('payu_pmp_gateway_load')){
             static function pmpro_payment_options($options)
             {
                 //get stripe options
-                $payu_options = PMProGateway_Payu::getGatewayOptions();
+                $payu_options = PMProGateway_payu::getGatewayOptions();
 
                 //merge with others.
                 $options = array_merge($payu_options, $options);
@@ -115,6 +115,24 @@ if(!function_exists('payu_pmp_gateway_load')){
                 <tr class="pmpro_settings_divider gateway gateway_payu" <?php if($gateway != "payu") { ?>style="display: none;"<?php } ?>>
                     <td colspan="2">
                         <?php _e('payU Settings', 'pmpro-payu-gateway'); ?>
+                    </td>
+                </tr>
+                <tr class="gateway gateway_payu" <?php if($gateway != "payu") { ?>style="display: none;"<?php } ?>>
+                    <th scope="row" valign="top">
+                        <label for="country"><?php _e('Country', 'pmpro-payu-gateway' );?>:</label>
+                    </th>
+                    <td>
+                        <?php
+                        $country = $values['country'];
+                        ?>
+                        <select name="country" id="country">
+                            <option value=""><?php _e('Select option', 'pmpro-payu-gateway' );?></option>
+                            <option value="AR" <?php if($country == 'AR') echo 'selected'; ?>>Argentina</option>
+                            <option value="BR" <?php if($country == 'BR') echo 'selected'; ?>>Brasil</option>
+                            <option value="CO" <?php if($country == 'CO') echo 'selected'; ?>>Colombia</option>
+                            <option value="MX" <?php if($country == 'MX') echo 'selected'; ?>>México</option>
+                            <option value="PE" <?php if($country == 'PE') echo 'selected'; ?>>Perú</option>
+                        </select>
                     </td>
                 </tr>
                 <tr class="gateway gateway_payu" <?php if($gateway != "payu") { ?>style="display: none;"<?php } ?>>
@@ -225,6 +243,7 @@ if(!function_exists('payu_pmp_gateway_load')){
                 $apiLogin = pmpro_getOption("apilogin");
                 $merchantId = pmpro_getOption("merchant_id");
                 $account_id = pmpro_getOption("account_id");
+                $country = pmpro_getOption("country");
                 PayU::$apiKey = $apiKey;
                 PayU::$apiLogin = $apiLogin;
                 PayU::$merchantId = $merchantId;
@@ -244,24 +263,23 @@ if(!function_exists('payu_pmp_gateway_load')){
                     $cardtype = 'DINERS';
                 $currency = $pmpro_currency;
                 $datecaduce = "$order->expirationyear/$order->expirationmonth";
-                if ($currency == 'ARS')
+
+                if ($country == 'AR' )
                     $payuCountry = PayUCountries::AR;
-                if ($currency == 'BRL')
+                if ($country == 'BR')
                     $payuCountry = PayUCountries::BR;
-                if ($currency == 'COP')
+                if ($country == 'CO')
                     $payuCountry = PayUCountries::CO;
-                if ($currency == 'MXN')
+                if ($country == 'MX')
                     $payuCountry = PayUCountries::MX;
-                if ($currency == 'USD')
-                    $payuCountry = PayUCountries::PA;
-                if ($currency == 'PEN')
+                if ($country == 'PE')
                     $payuCountry = PayUCountries::PE;
 
                 $amount = $order->InitialPayment;
                 //tax
                 $order->subtotal = $amount;
                 $tax = $order->getTax(true);
-                $amount = round((float)$order->subtotal + (float)$tax, 2);
+                $amount = round((float)$order->subtotal, 2);
                 $address2 = !empty($order->Address2) ? $order->Address2 : $order->Address1;
                 if(!isset($order->membership_level->name))
                     $order->membership_level->name = "";
@@ -273,11 +291,20 @@ if(!function_exists('payu_pmp_gateway_load')){
                     PayUParameters::REFERENCE_CODE => $order->code . time(),
                     //Ingrese aquí la descripción.
                     PayUParameters::DESCRIPTION => $order->membership_level->name . " Membership",
+
                     // -- Valores --
-                    //Ingrese aquí el valor.
+                    //Ingrese aquí el valor de la transacción.
                     PayUParameters::VALUE => $amount,
+                    //Ingrese aquí el valor del IVA (Impuesto al Valor Agregado solo valido para Colombia) de la transacción,
+                    //si se envía el IVA nulo el sistema aplicará el 19% automáticamente. Puede contener dos dígitos decimales.
+                    //Ej: 19000.00. En caso de no tener IVA debe enviarse en 0.
+                    PayUParameters::TAX_VALUE => $tax,
+                    //Ingrese aquí el valor base sobre el cual se calcula el IVA (solo valido para Colombia).
+                    //En caso de que no tenga IVA debe enviarse en 0.
+                    #PayUParameters::TAX_RETURN_BASE => "16806",
                     //Ingrese aquí la moneda.
                     PayUParameters::CURRENCY => $currency,
+
                     // -- Comprador
                     //Ingrese aquí el nombre del comprador.
                     PayUParameters::BUYER_NAME => $order->FirstName,
@@ -286,7 +313,7 @@ if(!function_exists('payu_pmp_gateway_load')){
                     //Ingrese aquí el teléfono de contacto del comprador.
                     PayUParameters::BUYER_CONTACT_PHONE => $order->billing->phone,
                     //Ingrese aquí el documento de contacto del comprador.
-                    PayUParameters::BUYER_DNI => '0000000',
+                    PayUParameters::BUYER_DNI => "00000000000000",
                     //Ingrese aquí la dirección del comprador.
                     PayUParameters::BUYER_STREET => $order->Address1,
                     PayUParameters::BUYER_STREET_2 => $address2,
@@ -295,6 +322,7 @@ if(!function_exists('payu_pmp_gateway_load')){
                     PayUParameters::BUYER_COUNTRY => $order->billing->country,
                     PayUParameters::BUYER_POSTAL_CODE => $order->billing->zip,
                     PayUParameters::BUYER_PHONE => $order->billing->phone,
+
                     // -- pagador --
                     //Ingrese aquí el nombre del pagador.
                     PayUParameters::PAYER_NAME => "APPROVED",
@@ -303,37 +331,40 @@ if(!function_exists('payu_pmp_gateway_load')){
                     //Ingrese aquí el teléfono de contacto del pagador.
                     PayUParameters::PAYER_CONTACT_PHONE => $order->billing->phone,
                     //Ingrese aquí el documento de contacto del pagador.
-                    PayUParameters::PAYER_DNI => '0000000',
+                    PayUParameters::PAYER_DNI => "00000000000000",
                     //Ingrese aquí la dirección del pagador.
                     PayUParameters::PAYER_STREET => $order->Address1,
-                    PayUParameters::PAYER_STREET_2 => $order->Address1,
+                    PayUParameters::PAYER_STREET_2 => $address2,
                     PayUParameters::PAYER_CITY => $order->billing->city,
                     PayUParameters::PAYER_STATE => $order->billing->state,
                     PayUParameters::PAYER_COUNTRY => $order->billing->country,
                     PayUParameters::PAYER_POSTAL_CODE => $order->billing->zip,
                     PayUParameters::PAYER_PHONE => $order->billing->phone,
+
                     // -- Datos de la tarjeta de crédito --
                     //Ingrese aquí el número de la tarjeta de crédito
                     PayUParameters::CREDIT_CARD_NUMBER => $accountnumber,
                     //Ingrese aquí la fecha de vencimiento de la tarjeta de crédito
                     PayUParameters::CREDIT_CARD_EXPIRATION_DATE => $datecaduce,
                     //Ingrese aquí el código de seguridad de la tarjeta de crédito
-                    PayUParameters::CREDIT_CARD_SECURITY_CODE => $order->CVV2,
+                    PayUParameters::CREDIT_CARD_SECURITY_CODE=> $order->CVV2,
                     //Ingrese aquí el nombre de la tarjeta de crédito
                     //VISA||MASTERCARD||AMEX||DINERS
                     PayUParameters::PAYMENT_METHOD => $cardtype,
+
                     //Ingrese aquí el número de cuotas.
                     PayUParameters::INSTALLMENTS_NUMBER => "1",
                     //Ingrese aquí el nombre del pais.
                     PayUParameters::COUNTRY => $payuCountry,
+
                     //Session id del device.
                     PayUParameters::DEVICE_SESSION_ID => md5(session_id().microtime()),
                     //IP del pagadador
                     PayUParameters::IP_ADDRESS => $this->getIP(),
                     //Cookie de la sesión actual.
-                    PayUParameters::PAYER_COOKIE => md5(session_id().microtime()),
+                    PayUParameters::PAYER_COOKIE=> md5(session_id().microtime()),
                     //Cookie de la sesión actual.
-                    PayUParameters::USER_AGENT => $_SERVER['HTTP_USER_AGENT']
+                    PayUParameters::USER_AGENT=> $_SERVER['HTTP_USER_AGENT']
                 );
 
                 try{
