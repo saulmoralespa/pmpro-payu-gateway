@@ -36,10 +36,14 @@ if(!function_exists('payu_pmp_gateway_load')){
             {
                 //make sure PayPal Express is a gateway option
                 add_filter('pmpro_gateways', array('PMProGateway_Payu', 'pmpro_gateways'));
+                add_filter('pmpro_include_billing_address_fields', '__return_false');
+                add_filter('pmpro_include_payment_information_fields', '__return_false');
 
                 //add fields to payment settings
                 add_filter('pmpro_payment_options', array('PMProGateway_Payu', 'pmpro_payment_options'));
                 add_filter('pmpro_payment_option_fields', array('PMProGateway_Payu', 'pmpro_payment_option_fields'), 10, 2);
+                add_filter('pmpro_required_billing_fields', array('PMProGateway_Payu', 'pmpro_required_billing_fields'));
+                add_filter('pmpro_checkout_confirmed', array('PMProGateway_Payu', 'pmpro_checkout_confirmed'));
             }
 
             static function plugin_action_links($links)
@@ -152,11 +156,52 @@ if(!function_exists('payu_pmp_gateway_load')){
                 <?php
             }
 
+            /**
+             * Remove required billing fields
+             *
+             * @since 1.8
+             */
+            static function pmpro_required_billing_fields($fields)
+            {
+                unset($fields['bfirstname']);
+                unset($fields['blastname']);
+                unset($fields['baddress1']);
+                unset($fields['bcity']);
+                unset($fields['bstate']);
+                unset($fields['bzipcode']);
+                unset($fields['bphone']);
+                unset($fields['bemail']);
+                unset($fields['bcountry']);
+                unset($fields['CardType']);
+                unset($fields['AccountNumber']);
+                unset($fields['ExpirationMonth']);
+                unset($fields['ExpirationYear']);
+                unset($fields['CVV']);
+
+                return $fields;
+            }
+
             static function pmpro_currencies( $currencies )
             {
                 $currencies['COP'] = __('Colombian pesos (&#36;)', 'pmpro-payu-gateway' );
                 $currencies['PEN'] = __('Peruvian sol (S/)', 'pmpro-payu-gateway' );
                 return $currencies;
+            }
+
+            /**
+             * Review and Confirmation code.
+             *
+             * @since 1.8
+             */
+            static function pmpro_checkout_confirmed($pmpro_confirmed)
+            {
+                if (isset($_REQUEST['transactionState'])){
+                    $morder = new MemberOrder();
+                    var_dump($morder);
+                    $morder->payment_transaction_id = $_REQUEST['transactionId'];
+                    $morder->updateStatus("success");
+
+                }
             }
 
 
@@ -166,51 +211,49 @@ if(!function_exists('payu_pmp_gateway_load')){
              */
             function process(&$order)
             {
-                //check for initial payment
-                if(floatval($order->InitialPayment) == 0)
-                {
-                    //just subscribe
-                    return $this->subscribe($order);
-                }
-                else
-                {
-                    //charge then subscribe
-                    if($this->charge($order) == 'success')
-                    {
-                        if(pmpro_isLevelRecurring($order->membership_level))
-                        {
-                            if($this->subscribe($order))
-                            {
-                                //yay!
-                                return true;
-                            }
-                            else
-                            {
-                                //try to refund initial charge
-                                return false;
-                            }
-                        }
-                        else
-                        {
-                            //only a one time charge
-                            $order->status = "success";	//saved on checkout page
-                            return true;
-                        }
-                    }elseif($this->charge($order) == 'pending'){
-                        if(empty($order->error)) {
-                            $order->error = __( "The payment is in pending status.", "pmpro-payu-gateway" );
-                        }
-                        return false;
-                    }
-                    else
-                    {
-                        if(empty($order->error)) {
-                            $order->error = __( "Unknown error: Initial payment failed.", "paid-memberships-pro" );
-                        }
-                        return false;
-                    }
-                }
+                $order->payment_type = "PayU";
+                $order->cardtype = "";
+                $order->ProfileStartDate = date_i18n("Y-m-d", strtotime("+ " . $order->BillingFrequency . " " . $order->BillingPeriod)) . "T0:0:0";
+                $order->ProfileStartDate = apply_filters("pmpro_profile_start_date", $order->ProfileStartDate, $order);
+
+                $print = print_r($order, true);
+                $this->log($print);
+                global $pmpro_currency;
+                if(empty($order->code))
+                $order->code = $order->getRandomCode();
+                $apiKey = pmpro_getOption("apikey");
+                $apiLogin = pmpro_getOption("apilogin");
+                $merchantId = pmpro_getOption("merchant_id");
+                $account_id = pmpro_getOption("account_id");
+                $tax = $order->getTax(true);
+                $reference = $order->code . time();
+                $amount = round((float)$order->subtotal, 2);
+                $signature = md5("$apiKey~$merchantId~$reference~$amount~$pmpro_currency");
+                $urlPay = $this->urlCheckout();
+                $environment = $this->environment();
+                $confirmation = admin_url("admin-ajax.php") . "?action=payu-ins";
+                $responseUrl = pmpro_url("checkout", "?level=" . $order->membership_level->id . "&review=" . $order->code);
+
+                echo '<form method="post" id="payuForm" action="'.$urlPay.'">
+  <input name="merchantId"    type="hidden"  value="'.$merchantId.'"   >
+  <input name="accountId"     type="hidden"  value="'.$account_id.'" >
+  <input name="description"   type="hidden"  value="'.$order->membership_level->name . 'Membership'.'"  >
+  <input name="referenceCode" type="hidden"  value="'.$reference.'" >
+  <input name="amount"        type="hidden"  value="'.$amount.'"   >
+  <input name="tax"           type="hidden"  value="'.$tax.'"  >
+  <input name="currency"      type="hidden"  value="'.$pmpro_currency.'" >
+  <input name="signature"     type="hidden"  value="'.$signature.'"  >
+  <input name="test"          type="hidden"  value="'.$environment.'" >
+  <input name="buyerEmail"    type="hidden"  value="'.$order->Email.'" >
+  <input name="responseUrl"    type="hidden"  value="'.$responseUrl.'" >
+  <input name="confirmationUrl"    type="hidden"  value="'.$confirmation.'" >
+</form>
+';
+                echo '<script>
+document.getElementById("payuForm").submit();
+</script>';
             }
+
 
             function charge(&$order)
             {
@@ -384,6 +427,15 @@ if(!function_exists('payu_pmp_gateway_load')){
                 return $host;
             }
 
+            function urlCheckout(){
+                if($this->environment()){
+                    $host = "https://sandbox.checkout.payulatam.com/ppp-web-gateway-payu/";
+                }else{
+                    $host = " https://checkout.payulatam.com/ppp-web-gateway-payu/";
+                }
+                return $host;
+            }
+
             function cancel(&$order) {
                 //require a subscription id
                 if(empty($order->subscription_transaction_id))
@@ -411,7 +463,7 @@ if(!function_exists('payu_pmp_gateway_load')){
                 return true;
             }
 
-            function log($message)
+            static function log($message)
             {
                 $file = PMPRO_PAYUGATEWAY_DIR . '/logpmpropayu.log';
                 $handle = fopen($file,'a+');
@@ -419,6 +471,5 @@ if(!function_exists('payu_pmp_gateway_load')){
                 fclose($handle);
             }
         }
-
     }
 }
